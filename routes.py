@@ -3,10 +3,48 @@ from app import app, db, ollama_service, screenshot_service, automation_service
 from models import Task, AutomationLog
 from datetime import datetime
 import json
+import os
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/settings/update', methods=['POST'])
+def update_settings():
+    try:
+        settings = request.json
+        
+        # Update model configurations
+        config_dir = "config/models"
+        
+        # Update LLaVA config
+        llava_config = os.path.join(config_dir, "llava.json")
+        if os.path.exists(llava_config):
+            with open(llava_config, 'r') as f:
+                config = json.load(f)
+            config['temperature'] = settings['llava']['temperature']
+            config['num_predict'] = settings['llava']['max_tokens']
+            with open(llava_config, 'w') as f:
+                json.dump(config, f, indent=4)
+
+        # Update Llama 2 config
+        llama_config = os.path.join(config_dir, "llama2.json")
+        if os.path.exists(llama_config):
+            with open(llama_config, 'r') as f:
+                config = json.load(f)
+            config['temperature'] = settings['llama2']['temperature']
+            config['num_predict'] = settings['llama2']['max_tokens']
+            with open(llama_config, 'w') as f:
+                json.dump(config, f, indent=4)
+
+        # Reload model registry
+        if ollama_service:
+            ollama_service.registry.load_models()
+
+        return jsonify({"success": True})
+    except Exception as e:
+        app.logger.error(f"Settings update failed: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/health')
 def health():

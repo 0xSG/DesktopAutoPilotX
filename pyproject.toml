@@ -13,4 +13,5 @@ dependencies = [
     "pyautogui>=0.9.54",
     "python-dotenv>=1.0.1",
     "werkzeug",
+    "litellm>=1.51.3",
 ]

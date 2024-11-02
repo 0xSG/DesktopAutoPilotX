@@ -16,11 +16,6 @@ class OllamaService:
         Use LLaVA to analyze UI elements in screenshots with precise detection
         """
         try:
-            # Get LLaVA model from registry
-            llava = self.registry.get_model('llava')
-            if not llava:
-                raise ValueError("LLaVA model not available")
-
             # Convert image to base64
             with Image.open(image_path) as img:
                 buffered = io.BytesIO()
@@ -39,9 +34,8 @@ class OllamaService:
             Format the response as a structured analysis.
             """
             
-            result = llava.generate(prompt, {
+            result = self.registry.generate('llava', prompt, {
                 "images": [img_str],
-                "model": "llava"
             })
 
             if result["success"]:
@@ -67,11 +61,6 @@ class OllamaService:
         Use Llama 2 for advanced task reasoning and planning
         """
         try:
-            # Get Llama 2 model from registry
-            llama2 = self.registry.get_model('llama2')
-            if not llama2:
-                raise ValueError("Llama 2 model not available")
-
             # Craft a detailed system prompt for better reasoning
             system_prompt = """
             You are an AI automation assistant specialized in UI interaction planning.
@@ -95,12 +84,7 @@ class OllamaService:
             Provide detailed reasoning and steps:
             """
             
-            result = llama2.generate(full_prompt, {
-                "model": "llama2",
-                "temperature": 0.7,
-                "num_predict": 2000,
-                "top_p": 0.9
-            })
+            result = self.registry.generate('llama2', full_prompt)
 
             if result["success"]:
                 self.logger.info("Successfully generated task reasoning")
