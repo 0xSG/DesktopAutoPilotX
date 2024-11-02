@@ -14,13 +14,22 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Configuration
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "default-secret-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file size
+
+# Replit-specific configuration
+app.config["SERVER_NAME"] = None  # Allow all hostnames
+app.config["PREFERRED_URL_SCHEME"] = "https"  # Force HTTPS on Replit
+app.config["PROPAGATE_EXCEPTIONS"] = True  # Ensure errors are properly logged
+app.config["ENV"] = "production"  # Set to production mode
+app.config["TEMPLATES_AUTO_RELOAD"] = False  # Disable template auto-reload
+app.config["SESSION_COOKIE_SECURE"] = True  # Force secure cookies
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # Set SameSite policy
 
 # Initialize database
 db = SQLAlchemy()
@@ -45,9 +54,11 @@ except Exception as e:
     automation_service = None
 
 # Import routes after db and service initialization
+from models import *
+from routes import *
+
+# Create tables within app context
 with app.app_context():
-    from models import *
-    from routes import *
     try:
         db.create_all()
         logger.info("Database tables created successfully")
