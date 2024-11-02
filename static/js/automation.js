@@ -1,57 +1,60 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const taskInput = document.getElementById('taskInput');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const executeBtn = document.getElementById('executeBtn');
-    const statusOutput = document.getElementById('statusOutput');
-
-    analyzeBtn.addEventListener('click', async () => {
-        const task = taskInput.value;
-        if (!task) {
-            addStatus('Error:', 'Please describe a task first');
-            return;
-        }
-
+    const taskForm = document.getElementById('taskForm');
+    const executionLog = document.getElementById('executionLog');
+    
+    function addLogEntry(message, type = 'info') {
+        const entry = document.createElement('div');
+        entry.className = `log-entry text-${type} mb-2`;
+        entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        executionLog.appendChild(entry);
+        executionLog.scrollTop = executionLog.scrollHeight;
+    }
+    
+    taskForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(taskForm);
         try {
-            const response = await fetch('/analyze', {
+            const response = await fetch('/task/create', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ task })
+                body: formData
             });
-            const data = await response.json();
-            addStatus('Analysis:', data.analysis);
+            
+            if (!response.ok) {
+                throw new Error('Task creation failed');
+            }
+            
+            const result = await response.json();
+            addLogEntry(`Task created: ${result.task_id}`, 'success');
+            
+            // Start monitoring task progress
+            monitorTask(result.task_id);
         } catch (error) {
-            addStatus('Error:', error.message);
+            addLogEntry(`Error: ${error.message}`, 'danger');
         }
     });
-
-    executeBtn.addEventListener('click', async () => {
-        const task = taskInput.value;
-        if (!task) {
-            addStatus('Error:', 'Please describe a task first');
-            return;
-        }
-
+    
+    async function monitorTask(taskId) {
         try {
-            const response = await fetch('/execute', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ task })
-            });
-            const data = await response.json();
-            addStatus('Execution Plan:', data.plan);
+            const response = await fetch(`/task/${taskId}/status`);
+            const status = await response.json();
+            
+            addLogEntry(status.message);
+            
+            if (status.screenshot) {
+                updateScreenshot(status.screenshot);
+            }
+            
+            if (status.status !== 'completed' && status.status !== 'failed') {
+                setTimeout(() => monitorTask(taskId), 1000);
+            }
         } catch (error) {
-            addStatus('Error:', error.message);
+            addLogEntry(`Monitoring error: ${error.message}`, 'danger');
         }
-    });
-
-    function addStatus(title, message) {
-        const div = document.createElement('div');
-        div.className = 'alert alert-info';
-        div.innerHTML = `<strong>${title}</strong> ${message}`;
-        statusOutput.prepend(div);
+    }
+    
+    function updateScreenshot(screenshotUrl) {
+        const screenshotDiv = document.getElementById('screenshot');
+        screenshotDiv.innerHTML = `<img src="${screenshotUrl}" class="img-fluid" alt="Current screen">`;
     }
 });

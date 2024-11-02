@@ -1,0 +1,40 @@
+.log-entry {
+    font-family: monospace;
+    padding: 4px;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.screenshot-container {
+    max-height: 400px;
+    overflow: hidden;
+}
+
+.screenshot-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.task-description {
+    white-space: pre-wrap;
+}
+
+.ai-reasoning {
+    background-color: var(--bs-dark);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* Custom scrollbar for log window */
+#executionLog::-webkit-scrollbar {
+    width: 8px;
+}
+
+#executionLog::-webkit-scrollbar-track {
+    background: var(--bs-dark);
+}
+
+#executionLog::-webkit-scrollbar-thumb {
+    background: var(--bs-secondary);
+    border-radius: 4px;
+}

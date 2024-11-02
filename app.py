@@ -1,103 +1,55 @@
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-from services.ollama_service import OllamaService
-from datetime import datetime
+import logging
 
-class Base(DeclarativeBase):
-    pass
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-db = SQLAlchemy(model_class=Base)
+# Initialize Flask app
+app = Flask(__name__)
 
-def create_app():
-    app = Flask(__name__)
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///automation.db")
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-    }
-    db.init_app(app)
+# Configuration
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max file size
 
-    # Ensure static folder exists
-    if not os.path.exists('static'):
-        os.makedirs('static')
+# Initialize database
+db = SQLAlchemy()
+db.init_app(app)
 
-    # Create static subdirectories if they don't exist
-    for folder in ['screenshots', 'css', 'js', 'img']:
-        folder_path = os.path.join('static', folder)
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+# Ensure required directories exist
+os.makedirs("static/screenshots", exist_ok=True)
 
-    class Task(db.Model):
-        id = db.Column(db.Integer, primary_key=True)
-        description = db.Column(db.String(500), nullable=False)
-        analysis = db.Column(db.Text)
-        execution_plan = db.Column(db.Text)
-        status = db.Column(db.String(50), default='pending')
-
-        def __init__(self, description=None, analysis=None, execution_plan=None, status='pending'):
-            self.description = description
-            self.analysis = analysis
-            self.execution_plan = execution_plan
-            self.status = status
-
+# Initialize services
+try:
+    from services.ollama_service import OllamaService
+    from services.screenshot_service import ScreenshotService
+    from services.automation_service import AutomationService
+    
     ollama_service = OllamaService()
+    screenshot_service = ScreenshotService()
+    automation_service = AutomationService()
+except Exception as e:
+    logger.error(f"Failed to initialize services: {str(e)}")
+    ollama_service = None
+    screenshot_service = None
+    automation_service = None
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-
-    @app.route('/analyze', methods=['POST'])
-    def analyze_task():
-        if not request.is_json:
-            return jsonify({'error': 'Content-Type must be application/json'}), 400
-        data = request.get_json()
-        task = data.get('task') if data else None
-        if not task:
-            return jsonify({'error': 'No task provided'}), 400
-        
-        # Get analysis from Ollama
-        analysis = ollama_service.generate_analysis(task)
-        
-        # Create a new task record
-        new_task = Task(
-            description=task,
-            analysis=analysis,
-            status='analyzed'
-        )
-        db.session.add(new_task)
-        db.session.commit()
-        
-        return jsonify({'analysis': new_task.analysis})
-
-    @app.route('/execute', methods=['POST'])
-    def execute_task():
-        if not request.is_json:
-            return jsonify({'error': 'Content-Type must be application/json'}), 400
-        data = request.get_json()
-        task = data.get('task') if data else None
-        if not task:
-            return jsonify({'error': 'No task provided'}), 400
-        
-        # Find or create task
-        db_task = Task.query.filter_by(description=task).first()
-        if not db_task:
-            db_task = Task(description=task)
-            analysis = ollama_service.generate_analysis(task)
-            db_task.analysis = analysis
-        
-        # Generate execution plan
-        execution_plan = ollama_service.generate_execution_plan(task, db_task.analysis)
-        db_task.execution_plan = execution_plan
-        db_task.status = 'planned'
-        db.session.add(db_task)
-        db.session.commit()
-        
-        return jsonify({'plan': db_task.execution_plan})
-
-    with app.app_context():
+# Import routes after db and service initialization
+with app.app_context():
+    from models import *
+    from routes import *
+    try:
         db.create_all()
-
-    return app
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create database tables: {str(e)}")

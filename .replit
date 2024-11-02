@@ -13,29 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flask Web Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Flask Server"
+args = "AI Automation Server"
 
 [[workflows.workflow]]
-name = "Flask Web Server"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python main.py"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Flask Server"
+name = "AI Automation Server"
 author = "agent"
 
 [workflows.workflow.metadata]

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">Task History</h5>
+    </div>
+    <div class="card-body">
+        {% if tasks %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                            <tr>
+                                <td>{{ task.id }}</td>
+                                <td class="task-description">{{ task.description }}</td>
+                                <td><span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' if task.status == 'pending' else 'danger' }}">{{ task.status }}</span></td>
+                                <td>{{ task.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ task.completed_at.strftime('%Y-%m-%d %H:%M:%S') if task.completed_at else '-' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No tasks found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

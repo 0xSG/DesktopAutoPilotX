@@ -2,25 +2,35 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-6">
         <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">New Automation Task</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Task Planning & Analysis</h5>
-                <div class="mb-3">
-                    <label for="taskInput" class="form-label">Describe your task:</label>
-                    <textarea class="form-control" id="taskInput" rows="3" placeholder="Example: Open Chrome and search for Python tutorials"></textarea>
-                </div>
-                <button class="btn btn-primary" id="analyzeBtn">Analyze Task</button>
-                <button class="btn btn-success" id="executeBtn">Generate Plan</button>
+                <form id="taskForm" method="POST" action="/task/create">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Task Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Start Task</button>
+                </form>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4">
+
+    <div class="col-md-6">
         <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Task Execution</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">AI Analysis & Planning</h5>
-                <div id="statusOutput" class="status-output"></div>
+                <div id="executionLog" class="border p-3 mb-3" style="height: 300px; overflow-y: auto;">
+                    <div class="text-muted">Waiting for task...</div>
+                </div>
+                <div id="screenshot" class="text-center">
+                    <!-- Screenshot will be displayed here -->
+                </div>
             </div>
         </div>
     </div>
