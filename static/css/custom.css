@@ -1,0 +1,17 @@
+.status-output {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.status-output .alert {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+}
+
+.card {
+    margin-bottom: 1rem;
+}
+
+textarea.form-control {
+    min-height: 100px;
+}
