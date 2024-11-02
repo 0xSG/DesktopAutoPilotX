@@ -40,30 +40,43 @@ def create_task():
     try:
         # Get AI reasoning if available
         if ollama_service:
-            ai_reasoning = ollama_service.get_reasoning(description)
-            task.ai_reasoning = ai_reasoning
+            reasoning_result = ollama_service.get_reasoning(description)
+            if reasoning_result['success']:
+                task.ai_reasoning = json.dumps({
+                    'reasoning': reasoning_result['reasoning'],
+                    'steps': reasoning_result['steps']
+                })
+            else:
+                app.logger.error(f"AI reasoning failed: {reasoning_result['error']}")
         
         # Take initial screenshot if available
         if screenshot_service:
             screenshot_path = screenshot_service.take_screenshot()
             task.screenshot_path = screenshot_path
             
-            # Create mock automation actions based on AI reasoning
-            if automation_service:
-                mock_actions = [
-                    {"type": "click", "x": 100, "y": 100},
-                    {"type": "type", "text": "Hello World"},
-                    {"type": "wait", "seconds": 1}
-                ]
-                
-                # Execute mock actions
-                for action in mock_actions:
-                    success = automation_service.execute_action(action)
-                    log = AutomationLog()
-                    log.task_id = task.id
-                    log.action = f"Executed {action['type']}: {json.dumps(action)}"
-                    log.success = success
-                    db.session.add(log)
+            # Analyze screenshot with LLaVA if available
+            if ollama_service and screenshot_path:
+                analysis_result = ollama_service.analyze_image(screenshot_path)
+                if analysis_result['success']:
+                    # Create automation actions based on UI analysis
+                    detected_elements = analysis_result['elements']
+                    
+                    # Execute actions based on detected elements
+                    if automation_service and detected_elements:
+                        for element in detected_elements:
+                            action = {
+                                "type": "analyze",
+                                "element": element
+                            }
+                            
+                            success = automation_service.execute_action(action)
+                            log = AutomationLog()
+                            log.task_id = task.id
+                            log.action = f"Analyzed UI element: {json.dumps(element)}"
+                            log.success = success
+                            db.session.add(log)
+                else:
+                    app.logger.error(f"Image analysis failed: {analysis_result['error']}")
             
         task.status = 'completed'
         task.completed_at = datetime.utcnow()
@@ -86,8 +99,17 @@ def task_status(task_id):
     task = Task.query.get_or_404(task_id)
     latest_log = AutomationLog.query.filter_by(task_id=task_id).order_by(AutomationLog.timestamp.desc()).first()
     
+    # Parse AI reasoning if available
+    ai_analysis = None
+    if task.ai_reasoning:
+        try:
+            ai_analysis = json.loads(task.ai_reasoning)
+        except:
+            ai_analysis = {"reasoning": task.ai_reasoning}
+    
     return jsonify({
         'status': task.status,
         'message': latest_log.action if latest_log else 'No updates',
-        'screenshot': task.screenshot_path if task.screenshot_path else None
+        'screenshot': task.screenshot_path if task.screenshot_path else None,
+        'ai_analysis': ai_analysis
     })
