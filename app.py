@@ -60,7 +60,10 @@ from routes import *
 # Create tables within app context
 with app.app_context():
     try:
+        # Drop all tables first to ensure clean slate
+        db.drop_all()
+        # Create all tables with updated schema
         db.create_all()
-        logger.info("Database tables created successfully")
+        logger.info("Database tables dropped and recreated successfully")
     except Exception as e:
-        logger.error(f"Failed to create database tables: {str(e)}")
+        logger.error(f"Failed to recreate database tables: {str(e)}")
