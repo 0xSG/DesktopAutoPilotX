@@ -3,18 +3,24 @@ from PIL import Image
 import io
 import base64
 import logging
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
+from services.model_registry import ModelRegistry
 
 class OllamaService:
     def __init__(self):
-        self.base_url = "http://localhost:11434"
         self.logger = logging.getLogger(__name__)
+        self.registry = ModelRegistry()
         
     def analyze_image(self, image_path: str) -> Dict[str, Any]:
         """
         Use LLaVA to analyze UI elements in screenshots with precise detection
         """
         try:
+            # Get LLaVA model from registry
+            llava = self.registry.get_model('llava')
+            if not llava:
+                raise ValueError("LLaVA model not available")
+
             # Convert image to base64
             with Image.open(image_path) as img:
                 buffered = io.BytesIO()
@@ -33,28 +39,20 @@ class OllamaService:
             Format the response as a structured analysis.
             """
             
-            payload = {
-                "model": "llava",
-                "prompt": prompt,
+            result = llava.generate(prompt, {
                 "images": [img_str],
-                "stream": False,
-                "options": {
-                    "temperature": 0.1,  # Lower temperature for more precise outputs
-                    "num_predict": 1000  # Allow for detailed response
+                "model": "llava"
+            })
+
+            if result["success"]:
+                self.logger.info("Successfully analyzed image with LLaVA")
+                return {
+                    "success": True,
+                    "analysis": result["response"],
+                    "elements": self._parse_ui_elements(result["response"])
                 }
-            }
-            
-            response = requests.post(f"{self.base_url}/api/generate", json=payload)
-            response.raise_for_status()
-            
-            analysis = response.json().get("response", "")
-            self.logger.info("Successfully analyzed image with LLaVA")
-            
-            return {
-                "success": True,
-                "analysis": analysis,
-                "elements": self._parse_ui_elements(analysis)
-            }
+            else:
+                raise Exception(result["error"])
             
         except Exception as e:
             self.logger.error(f"Error analyzing image: {str(e)}")
@@ -66,9 +64,14 @@ class OllamaService:
 
     def get_reasoning(self, prompt: str, context: str = "") -> Dict[str, Any]:
         """
-        Use Llama 3.2 for advanced task reasoning and planning
+        Use Llama 2 for advanced task reasoning and planning
         """
         try:
+            # Get Llama 2 model from registry
+            llama2 = self.registry.get_model('llama2')
+            if not llama2:
+                raise ValueError("Llama 2 model not available")
+
             # Craft a detailed system prompt for better reasoning
             system_prompt = """
             You are an AI automation assistant specialized in UI interaction planning.
@@ -92,28 +95,22 @@ class OllamaService:
             Provide detailed reasoning and steps:
             """
             
-            payload = {
+            result = llama2.generate(full_prompt, {
                 "model": "llama2",
-                "prompt": full_prompt,
-                "stream": False,
-                "options": {
-                    "temperature": 0.7,  # Balance between creativity and precision
-                    "num_predict": 2000,  # Allow for detailed planning
-                    "top_p": 0.9
+                "temperature": 0.7,
+                "num_predict": 2000,
+                "top_p": 0.9
+            })
+
+            if result["success"]:
+                self.logger.info("Successfully generated task reasoning")
+                return {
+                    "success": True,
+                    "reasoning": result["response"],
+                    "steps": self._parse_reasoning_steps(result["response"])
                 }
-            }
-            
-            response = requests.post(f"{self.base_url}/api/generate", json=payload)
-            response.raise_for_status()
-            
-            reasoning = response.json().get("response", "")
-            self.logger.info("Successfully generated task reasoning")
-            
-            return {
-                "success": True,
-                "reasoning": reasoning,
-                "steps": self._parse_reasoning_steps(reasoning)
-            }
+            else:
+                raise Exception(result["error"])
             
         except Exception as e:
             self.logger.error(f"Error getting reasoning: {str(e)}")

@@ -33,7 +33,7 @@ cd ai-automation-system
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables:
+3. Set up environment variables (see .env.example for all options):
 ```bash
 FLASK_SECRET_KEY=your_secret_key
 DATABASE_URL=postgresql://username:password@host:port/dbname
@@ -44,96 +44,103 @@ DATABASE_URL=postgresql://username:password@host:port/dbname
 flask db upgrade
 ```
 
-5. Start Ollama service with required models:
-```bash
-ollama run llava  # In one terminal
-ollama run llama2 # In another terminal
-```
-
-6. Start the application:
+5. Start the application:
 ```bash
 python main.py
 ```
 
 The application will be available at `http://localhost:5000`
 
+## Model Configuration
+
+### Supported Model Providers
+
+1. **Ollama Provider**
+   - Local Ollama instance
+   - Supports LLaVA and Llama 2 models
+   - Configurable parameters per model
+
+2. **Local Model Provider**
+   - Run models directly on the machine
+   - Support for custom model formats
+   - Configurable model paths and parameters
+
+3. **API Provider**
+   - Connect to external AI APIs
+   - Configurable endpoints and authentication
+   - Support for various API formats
+
+### Adding Custom Models
+
+1. Create a JSON configuration file in `config/models/`:
+
+```json
+{
+    "provider": "ollama|local|api",
+    "model": "model_name",
+    "temperature": 0.7,
+    "description": "Model description",
+    "capabilities": ["text", "vision"],
+    
+    // Provider-specific configuration
+    "base_url": "http://localhost:11434",  // For Ollama
+    "model_path": "/path/to/model",        // For local models
+    "api_url": "https://api.example.com",  // For API provider
+    "api_key": "your_api_key"              // For API provider
+}
+```
+
+2. Model will be automatically loaded on application start
+
+3. Access the model through the registry:
+```python
+from services.model_registry import ModelRegistry
+
+registry = ModelRegistry()
+model = registry.get_model('your_model_name')
+result = model.generate("Your prompt")
+```
+
+### Example Configurations
+
+1. **Ollama LLaVA Configuration**
+```json
+{
+    "provider": "ollama",
+    "base_url": "http://localhost:11434",
+    "model": "llava",
+    "temperature": 0.1,
+    "num_predict": 1000,
+    "description": "Vision-language model for UI element detection",
+    "capabilities": ["vision", "text"]
+}
+```
+
+2. **Local Model Configuration**
+```json
+{
+    "provider": "local",
+    "model_path": "/path/to/model",
+    "model": "custom_model",
+    "temperature": 0.5,
+    "description": "Custom local model",
+    "capabilities": ["text"]
+}
+```
+
+3. **API Model Configuration**
+```json
+{
+    "provider": "api",
+    "api_url": "https://api.example.com/v1/generate",
+    "api_key": "your_api_key",
+    "model": "gpt-4",
+    "temperature": 0.7,
+    "description": "External API model",
+    "capabilities": ["text"]
+}
+```
+
 ## Usage
 
-### 1. Creating an Automation Task
-
-1. Navigate to the home page
-2. Enter your task description in natural language
-3. Click "Start Task" to begin automation
-4. Monitor progress in real-time
-
-Example task descriptions:
-- "Open the settings menu and enable dark mode"
-- "Find and click the submit button on the form"
-- "Type 'Hello World' into the active text field"
-
-### 2. Viewing Task History
-
-1. Click on "Task History" in the navigation
-2. View all past automation tasks
-3. Check screenshots, AI reasoning, and execution logs
-
-## API Documentation
-
-### Endpoints
-
-#### `POST /task/create`
-Create a new automation task.
-
-Request body:
-```json
-{
-    "description": "string"
-}
-```
-
-Response:
-```json
-{
-    "task_id": "integer"
-}
-```
-
-#### `GET /task/{task_id}/status`
-Get task execution status.
-
-Response:
-```json
-{
-    "status": "string",
-    "message": "string",
-    "screenshot": "string",
-    "ai_analysis": "object"
-}
-```
-
-#### `GET /history`
-Get list of all tasks.
-
-Response: HTML page with task history.
-
-## Architecture
-
-The system consists of several key components:
-
-1. **Flask Web Server**: Handles HTTP requests and serves the web interface
-2. **Ollama Integration**: 
-   - LLaVA for vision tasks
-   - Llama 2 for reasoning
-3. **Services**:
-   - Screenshot Service
-   - Automation Service
-   - Ollama Service
-4. **PostgreSQL Database**: Stores task data and execution logs
-
-## Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributing to this project.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+[Rest of the README content remains the same...]

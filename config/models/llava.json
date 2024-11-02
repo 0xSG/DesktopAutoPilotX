@@ -1,0 +1,9 @@
+{
+    "provider": "ollama",
+    "base_url": "http://localhost:11434",
+    "model": "llava",
+    "temperature": 0.1,
+    "num_predict": 1000,
+    "description": "Vision-language model for UI element detection",
+    "capabilities": ["vision", "text"]
+}
