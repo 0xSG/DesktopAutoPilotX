@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="/">AI Automation</a>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-robot"></i> AI Automation
+            </a>
             <div class="navbar-nav me-auto">
-                <a class="nav-link" href="/">Home</a>
-                <a class="nav-link" href="/history">Task History</a>
+                <a class="nav-link" href="/"><i class="bi bi-house-door"></i> Home</a>
+                <a class="nav-link" href="/history"><i class="bi bi-clock-history"></i> Task History</a>
             </div>
             <div class="navbar-nav">
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#settingsModal">
@@ -24,12 +26,17 @@
         </div>
     </nav>
 
+    <!-- Simple Separator -->
+    <div class="separator"></div>
+
     <!-- Settings Modal -->
     <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="settingsModalLabel">Model Settings</h5>
+                    <h5 class="modal-title" id="settingsModalLabel">
+                        <i class="bi bi-sliders"></i> Model Settings
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -83,8 +90,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveSettings">Save Settings</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveSettings">
+                        Save Settings
+                    </button>
                 </div>
             </div>
         </div>
@@ -94,7 +105,10 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
