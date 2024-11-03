@@ -1,146 +1,227 @@
-# DesktopAutoPilotX: 
+<div align="center">
 
-Looking for a free, open-source alternative to Claude's "Computer Use"? DesktopAutoPilotX brings the power of local AI automation to your computer, without the need for API keys or cloud services.
+# DesktopAutoPilotX
 
-## Why This Matters
+🤖 Open-source AI automation for everyone, powered by local LLMs
 
-Today's businesses are looking for ways to automate repetitive tasks, but most solutions either require expensive subscriptions or lack true AI capabilities. DesktopAutoPilotX bridges this gap by providing a local, intelligent automation system that's both powerful and accessible. Think of it as your personal automation assistant that can see, understand, and interact with your computer just like a human would.
+[![GitHub stars](https://img.shields.io/github/stars/0xSG/DesktopAutoPilotX?style=social)](https://github.com/0xSG/DesktopAutoPilotX/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID)](https://discord.gg/kvnShnxt)
+[![Twitter Follow](https://img.shields.io/twitter/follow/sooryagangaraj?style=social)](https://x.com/sooryagangaraj)
 
-## What Makes It Special?
+[Installation](#installation) • [Documentation](docs/) • [Examples](examples/) • [Contributing](CONTRIBUTING.md) • [Community](#community)
 
-- 🤖 **AI That Understands Your Screen**: Using LLaVA for vision and Llama 2 for reasoning, it's like having a smart assistant who can actually see your screen
-- 🎯 **Precise & Intelligent**: No more pixel-perfect coordinates - it finds and interacts with UI elements just like you would
-- 📊 **Never Misses a Beat**: Keeps detailed logs of what it did and why, so you're always in the loop
-- 🔍 **Watch It Work**: See exactly what it's doing in real-time, perfect for building trust in automation
-- 🧠 **Thinks Before It Acts**: Breaks down complex tasks into simple steps, just like a human would
+## 📸 Screenshots
 
-## Getting Started Is Easy
+<p align="center">
+  <img src="assets/settings-screen.png" alt="Settings Screen" width="800"/>
+  <em>AI Model Configuration and Theme Settings</em>
+</p>
 
-First, make sure you have these basics covered:
+<p align="center">
+  <img src="assets/task-history.png" alt="Task History" width="800"/>
+  <em>Task History Overview</em>
+</p>
+
+<p align="center">
+  <img src="assets/new-task.png" alt="New Automation Task" width="800"/>
+  <em>New Automation Task Creation Interface</em>
+</p>
+
+</div>
+
+## 🌟 What is DesktopAutoPilotX?
+
+DesktopAutoPilotX is your computer's new co-pilot – a free, open-source AI automation system that sees, understands, and interacts with your desktop just like you do. No cloud services, no API keys, just pure local AI power.
+
+### ✨ Key Features
+
+- 🧠 **True AI Vision**: Powered by LLaVA and Llama 2 for intelligent screen understanding
+- 🎯 **Context-Aware**: Finds and interacts with UI elements naturally, no pixel coordinates needed
+- 📊 **Transparent**: Real-time visualization and detailed logging of all actions
+- 🛡️ **Secure**: Runs 100% locally - your data never leaves your machine
+- 🔄 **Self-Learning**: Gets smarter with each task it handles
+
+## 🚀 Quick Start
+
+### Prerequisites
+
 - Python 3.11+
 - PostgreSQL
 - Ollama with LLaVA and Llama 2 models
-- Git (for joining our community)
+- Git
+- Poetry (Python package manager)
 
-### Quick Setup
+### Installation
 
-1. Grab the code:
 ```bash
-git clone https://github.com/yourusername/ai-automation-system.git
-cd ai-automation-system
-```
+# Clone the repo
+git clone https://github.com/0xSG/DesktopAutoPilotX.git
+cd DesktopAutoPilotX
 
-2. Install what you need:
-```bash
-pip install -r requirements.txt
-```
+# Install dependencies using Poetry
+poetry install
 
-3. Set up your environment (check .env.example for all options):
-```bash
-FLASK_SECRET_KEY=your_secret_key
-DATABASE_URL=postgresql://username:password@host:port/dbname
-```
+# Activate the virtual environment
+poetry shell
 
-4. Prepare the database:
-```bash
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your settings
+
+# Initialize database
 flask db upgrade
-```
 
-5. Launch it:
-```bash
+# Launch
 python main.py
 ```
 
-Visit `http://localhost:5000` and you're ready to go!
+### Development Setup
 
-## Making It Your Own
+```bash
+# Install development dependencies
+poetry install --with dev,test,docs
 
-### Working with Models
+# Install pre-commit hooks
+poetry run pre-commit install
 
-We support three ways to bring AI into your automation:
+# Run tests
+poetry run pytest
 
-1. **Ollama Provider**: Perfect for running everything locally
-2. **Local Model Provider**: Want to use your own models? No problem!
-3. **API Provider**: Need to connect to external AI services? We've got you covered
+# Run type checking
+poetry run mypy .
 
-### Adding Your Own Models
-
-Creating a new model configuration is straightforward. Just add a JSON file in `config/models/`:
-
-```json
-{
-    "provider": "ollama|local|api",
-    "model": "model_name",
-    "temperature": 0.7,
-    "description": "What makes your model special",
-    "capabilities": ["text", "vision"]
-    // Provider-specific settings here
-}
+# Format code
+poetry run black .
+poetry run ruff .
 ```
 
-### Example Configurations
+### Using Docker
 
-1. **Ollama LLaVA Configuration**
-```json
-{
-    "provider": "ollama",
-    "base_url": "http://localhost:11434",
-    "model": "llava",
-    "temperature": 0.1,
-    "num_predict": 1000,
-    "description": "Vision-language model for UI element detection",
-    "capabilities": ["vision", "text"]
-}
+```bash
+# Build and run using Docker Compose
+docker compose up -d
 ```
 
-2. **Local Model Configuration**
-```json
-{
-    "provider": "local",
-    "model_path": "/path/to/model",
-    "model": "custom_model",
-    "temperature": 0.5,
-    "description": "Custom local model",
-    "capabilities": ["text"]
-}
+## 📦 Project Structure
+
+```
+DesktopAutoPilotX/
+├── src/
+│   └── desktop_autopilot/
+│       ├── core/           # Core automation engine
+│       ├── models/         # AI model integrations
+│       ├── vision/         # Screen analysis components
+│       └── utils/          # Utility functions
+├── tests/                  # Test suite
+├── docs/                   # Documentation
+├── examples/               # Example scripts
+├── docker/                 # Docker configurations
+├── pyproject.toml         # Project dependencies and config
+└── README.md              # You are here
 ```
 
-3. **API Model Configuration**
-```json
-{
-    "provider": "api",
-    "api_url": "https://api.example.com/v1/generate",
-    "api_key": "your_api_key",
-    "model": "gpt-4",
-    "temperature": 0.7,
-    "description": "External API model",
-    "capabilities": ["text"]
-}
+## 🎮 Usage Examples
+
+```python
+from desktop_autopilot import AutoPilot
+
+pilot = AutoPilot()
+
+# Example 1: Web Automation
+@pilot.task
+async def search_github():
+    """Search for a repository on GitHub."""
+    await pilot.browser.open("https://github.com")
+    await pilot.keyboard.type("DesktopAutoPilotX")
+    await pilot.keyboard.press("Enter")
+    
+# Example 2: Desktop App Automation
+@pilot.task
+async def process_images():
+    """Batch process images in a folder."""
+    await pilot.app.launch("PhotoEditor")
+    await pilot.folder.select("~/Pictures/batch")
+    await pilot.vision.wait_for("Process All")
+    await pilot.mouse.click()
 ```
 
-## Join Our Community
+More examples in our [cookbook](docs/cookbook.md) 📚
 
-DesktopAutoPilotX is more than just code - it's a community of people who believe in making computers work better for humans. Whether you're a seasoned developer or just getting started with automation, we'd love to have you aboard.
+## 🛠️ Configuration
 
-### How You Can Contribute
+### AI Provider Setup
 
-1. **Try it out**: Use it, break it, tell us what you think
-2. **Share your ideas**: Open issues for features you'd love to see
-3. **Show us your code**: Pull requests are always welcome
-4. **Spread the word**: If you like what we're building, let others know!
+Configure your AI providers in `config/providers.toml`:
 
-Remember, every great tool started with a community of passionate people. Your contribution, no matter how small, helps make DesktopAutoPilotX better for everyone.
+```toml
+[ollama]
+base_url = "http://localhost:11434"
+models = ["llava", "llama2"]
+timeout = 30
 
-### Key Areas We're Looking For Help
+[local]
+model_path = "/path/to/models"
+device = "cuda"
 
-- 🎨 UI/UX improvements
-- 🧪 Testing and bug reporting
-- 📚 Documentation
-- 🔧 New feature development
-- 🌍 Internationalization
+[api]
+base_url = "https://api.example.com/v1"
+timeout = 10
+```
 
-Ready to dive in? Check out our [Contribution Guidelines](CONTRIBUTING.md) to get started!
+### Environment Variables
 
-## License
+```bash
+# Required
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
+FLASK_SECRET_KEY=your-secret-key
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Optional
+LOG_LEVEL=INFO
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+## 👥 Community & Support
+
+[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID)](https://discord.gg/kvnShnxt)
+[![Twitter Follow](https://img.shields.io/twitter/follow/sooryagangaraj?style=social)](https://x.com/sooryagangaraj)
+
+- 💬 [Join our Discord](https://discord.gg/kvnShnxt)
+- 🐦 [Follow on X (Twitter)](https://x.com/sooryagangaraj)
+- 📝 [Read our blog](https://thedevstories.com)
+
+## 🤝 Contributing
+
+We believe great software is built together! Check out our [Contributing Guidelines](CONTRIBUTING.md) to get started.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature-name`
+3. Make your changes
+4. Run tests: `poetry run pytest`
+5. Format code: `poetry run black . && poetry run ruff .`
+6. Commit: `git commit -m "feat: add new feature"`
+7. Push: `git push origin feature-name`
+8. Open a Pull Request
+
+## 📈 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=0xSG/DesktopAutoPilotX&type=Date)](https://star-history.com/#0xSG/DesktopAutoPilotX)
+
+## 📜 License
+
+DesktopAutoPilotX is MIT licensed, as found in the [LICENSE](LICENSE) file.
+
+---
+
+<div align="center">
+Made with ❤️ by the DesktopAutoPilotX Community
+
+[⬆ back to top](#desktopautopilotx)
+</div>
