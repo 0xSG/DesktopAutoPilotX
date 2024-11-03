@@ -1,4 +1,4 @@
-# AI Computer Automation System
+# DesktopAutoPilotX | AI Computer Automation System
 
 A powerful automation system that integrates local Ollama AI for computer vision and reasoning capabilities. This system allows automated UI interaction with intelligent decision-making powered by LLaVA for vision tasks and Llama 2 for reasoning.
 
