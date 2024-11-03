@@ -1,4 +1,4 @@
-# DesktopAutoPilotX: Your AI-Powered Computer Companion
+# DesktopAutoPilotX: 
 
 Looking for a free, open-source alternative to Claude's "Computer Use"? DesktopAutoPilotX brings the power of local AI automation to your computer, without the need for API keys or cloud services.
 
