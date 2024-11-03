@@ -11,7 +11,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID)](https://discord.gg/kvnShnxt)
+[![Discord](https://img.shields.io/discord/1302574295435841567)](https://discord.gg/kvnShnxt)
 [![Twitter Follow](https://img.shields.io/twitter/follow/sooryagangaraj?style=social)](https://x.com/sooryagangaraj)
 
 [Installation](#installation) • [Documentation](docs/) • [Examples](examples/) • [Contributing](CONTRIBUTING.md) • [Community](#community)
