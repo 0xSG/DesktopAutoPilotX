@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 class ModelRegistry:
     def __init__(self):
         self.models: Dict[str, Dict[str, Any]] = {}
+        self._selected_models = {
+            'vision': None,
+            'reasoning': None
+        }
         self.load_models()
 
     def load_models(self) -> None:
@@ -47,6 +51,20 @@ class ModelRegistry:
     def list_models(self) -> Dict[str, Dict[str, Any]]:
         """List all registered models and their configurations"""
         return self.models
+
+    @property
+    def selected_models(self) -> Dict[str, str]:
+        """Get currently selected models"""
+        return self._selected_models
+
+    @selected_models.setter
+    def selected_models(self, models: Dict[str, str]) -> None:
+        """Set selected models for vision and reasoning tasks"""
+        if 'vision' in models:
+            self._selected_models['vision'] = models['vision']
+        if 'reasoning' in models:
+            self._selected_models['reasoning'] = models['reasoning']
+        logger.info(f"Updated selected models: {self._selected_models}")
 
     def generate(self, model_name: str, prompt: str, options: Dict[str, Any] = None) -> Dict[str, Any]:
         """Generate completion using litellm"""

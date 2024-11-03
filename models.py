@@ -1,5 +1,7 @@
 from datetime import datetime
-from app import db
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,16 +26,13 @@
         </div>
     </nav>
 
-    <!-- Simple Separator -->
-    <div class="separator"></div>
-
     <!-- Settings Modal -->
     <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="settingsModalLabel">
-                        <i class="bi bi-sliders"></i> Model Settings
+                        <i class="bi bi-sliders"></i> Settings
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -44,46 +41,44 @@
                         <div class="col-md-6">
                             <div class="card mb-3">
                                 <div class="card-header">
-                                    <h6 class="card-title mb-0">Vision Model (LLaVA)</h6>
+                                    <h6 class="card-title mb-0">Model Configuration</h6>
                                 </div>
                                 <div class="card-body">
-                                    <form id="visionModelForm">
+                                    <form id="modelConfigForm">
                                         <div class="mb-3">
-                                            <label class="form-label">Temperature</label>
-                                            <input type="range" class="form-range" id="llavaTemp" min="0" max="1" step="0.1" value="0.1">
-                                            <small class="text-muted" id="llavaTempValue">0.1</small>
+                                            <label class="form-label">Vision Model</label>
+                                            <select class="form-select" id="visionModel">
+                                                <!-- Models will be populated dynamically -->
+                                            </select>
+                                            <small class="text-muted">Status: <span id="visionStatus" class="badge bg-secondary">Checking...</span></small>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Max Tokens</label>
-                                            <input type="number" class="form-control" id="llavaTokens" value="1000">
+                                            <label class="form-label">Reasoning Model</label>
+                                            <select class="form-select" id="reasoningModel">
+                                                <!-- Models will be populated dynamically -->
+                                            </select>
+                                            <small class="text-muted">Status: <span id="reasoningStatus" class="badge bg-secondary">Checking...</span></small>
                                         </div>
                                     </form>
-                                </div>
-                                <div class="card-footer">
-                                    <small class="text-muted">Status: <span id="llavaStatus" class="badge bg-success">Connected</span></small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card mb-3">
                                 <div class="card-header">
-                                    <h6 class="card-title mb-0">Reasoning Model (Llama 2)</h6>
+                                    <h6 class="card-title mb-0">Theme Settings</h6>
                                 </div>
                                 <div class="card-body">
-                                    <form id="reasoningModelForm">
+                                    <form id="themeForm">
                                         <div class="mb-3">
-                                            <label class="form-label">Temperature</label>
-                                            <input type="range" class="form-range" id="llamaTemp" min="0" max="1" step="0.1" value="0.7">
-                                            <small class="text-muted" id="llamaTempValue">0.7</small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Max Tokens</label>
-                                            <input type="number" class="form-control" id="llamaTokens" value="2000">
+                                            <label class="form-label">Theme Mode</label>
+                                            <select class="form-select" id="themeMode">
+                                                <option value="light">Light</option>
+                                                <option value="dark">Dark</option>
+                                                <option value="system">System</option>
+                                            </select>
                                         </div>
                                     </form>
-                                </div>
-                                <div class="card-footer">
-                                    <small class="text-muted">Status: <span id="llamaStatus" class="badge bg-success">Connected</span></small>
                                 </div>
                             </div>
                         </div>

@@ -1,49 +1,82 @@
-from flask import render_template, request, jsonify, flash, redirect, url_for
-from app import app, db, ollama_service, screenshot_service, automation_service
-from models import Task, AutomationLog
-from datetime import datetime
-import json
-import os
+from flask import render_template, request, jsonify, flash
+from app import app, ollama_service, screenshot_service, automation_service
+from models import Task, AutomationLog, db
+import logging
+
+logger = logging.getLogger(__name__)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/api/models/list')
+def list_models():
+    try:
+        if ollama_service and ollama_service.registry:
+            models = ollama_service.registry.list_models()
+            
+            # Categorize models by capability
+            vision_models = []
+            reasoning_models = []
+            
+            for model_id, config in models.items():
+                model_info = {
+                    'id': model_id,
+                    'name': config.get('model', model_id),
+                    'description': config.get('description', '')
+                }
+                
+                if 'vision' in config.get('capabilities', []):
+                    vision_models.append(model_info)
+                if 'text' in config.get('capabilities', []):
+                    reasoning_models.append(model_info)
+            
+            return jsonify({
+                'vision': vision_models,
+                'reasoning': reasoning_models
+            })
+        else:
+            return jsonify({'error': 'Model registry not available'}), 503
+    except Exception as e:
+        logger.error(f"Error listing models: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/settings/update', methods=['POST'])
 def update_settings():
     try:
-        settings = request.json
+        settings = request.get_json()
+        if not settings:
+            return jsonify({"error": "No settings data provided"}), 400
+            
+        if not isinstance(settings, dict) or 'models' not in settings:
+            return jsonify({"error": "Invalid settings format"}), 400
+            
+        models = settings.get('models', {})
+        if not isinstance(models, dict):
+            return jsonify({"error": "Invalid models format"}), 400
+            
+        # Update model selections in registry
+        if ollama_service and ollama_service.registry:
+            # Validate model selections
+            available_models = ollama_service.registry.list_models()
+            
+            vision_model = models.get('vision')
+            reasoning_model = models.get('reasoning')
+            
+            if vision_model and vision_model not in available_models:
+                return jsonify({"error": f"Invalid vision model: {vision_model}"}), 400
+            if reasoning_model and reasoning_model not in available_models:
+                return jsonify({"error": f"Invalid reasoning model: {reasoning_model}"}), 400
+            
+            # Update selected models
+            ollama_service.registry.selected_models = {
+                'vision': vision_model,
+                'reasoning': reasoning_model
+            }
         
-        # Update model configurations
-        config_dir = "config/models"
-        
-        # Update LLaVA config
-        llava_config = os.path.join(config_dir, "llava.json")
-        if os.path.exists(llava_config):
-            with open(llava_config, 'r') as f:
-                config = json.load(f)
-            config['temperature'] = settings['llava']['temperature']
-            config['num_predict'] = settings['llava']['max_tokens']
-            with open(llava_config, 'w') as f:
-                json.dump(config, f, indent=4)
-
-        # Update Llama 2 config
-        llama_config = os.path.join(config_dir, "llama2.json")
-        if os.path.exists(llama_config):
-            with open(llama_config, 'r') as f:
-                config = json.load(f)
-            config['temperature'] = settings['llama2']['temperature']
-            config['num_predict'] = settings['llama2']['max_tokens']
-            with open(llama_config, 'w') as f:
-                json.dump(config, f, indent=4)
-
-        # Reload model registry
-        if ollama_service:
-            ollama_service.registry.load_models()
-
         return jsonify({"success": True})
     except Exception as e:
-        app.logger.error(f"Settings update failed: {str(e)}")
+        logger.error(f"Settings update failed: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/health')
@@ -60,94 +93,3 @@ def health():
 def history():
     tasks = Task.query.order_by(Task.created_at.desc()).all()
     return render_template('history.html', tasks=tasks)
-
-@app.route('/task/create', methods=['POST'])
-def create_task():
-    description = request.form.get('description')
-    if not description:
-        flash('Task description is required', 'danger')
-        return jsonify({'error': 'Description required'}), 400
-    
-    # Create new task
-    task = Task()
-    task.description = description
-    task.status = 'pending'
-    db.session.add(task)
-    db.session.commit()
-    
-    try:
-        # Get AI reasoning if available
-        if ollama_service:
-            reasoning_result = ollama_service.get_reasoning(description)
-            if reasoning_result['success']:
-                task.ai_reasoning = json.dumps({
-                    'reasoning': reasoning_result['reasoning'],
-                    'steps': reasoning_result['steps']
-                })
-            else:
-                app.logger.error(f"AI reasoning failed: {reasoning_result['error']}")
-        
-        # Take initial screenshot if available
-        if screenshot_service:
-            screenshot_path = screenshot_service.take_screenshot()
-            task.screenshot_path = screenshot_path
-            
-            # Analyze screenshot with LLaVA if available
-            if ollama_service and screenshot_path:
-                analysis_result = ollama_service.analyze_image(screenshot_path)
-                if analysis_result['success']:
-                    # Create automation actions based on UI analysis
-                    detected_elements = analysis_result['elements']
-                    
-                    # Execute actions based on detected elements
-                    if automation_service and detected_elements:
-                        for element in detected_elements:
-                            action = {
-                                "type": "analyze",
-                                "element": element
-                            }
-                            
-                            success = automation_service.execute_action(action)
-                            log = AutomationLog()
-                            log.task_id = task.id
-                            log.action = f"Analyzed UI element: {json.dumps(element)}"
-                            log.success = success
-                            db.session.add(log)
-                else:
-                    app.logger.error(f"Image analysis failed: {analysis_result['error']}")
-            
-        task.status = 'completed'
-        task.completed_at = datetime.utcnow()
-        
-    except Exception as e:
-        app.logger.error(f"Task execution failed: {str(e)}")
-        task.status = 'failed'
-        log = AutomationLog()
-        log.task_id = task.id
-        log.action = f"Task failed: {str(e)}"
-        log.success = False
-        log.error_message = str(e)
-        db.session.add(log)
-    
-    db.session.commit()
-    return jsonify({'task_id': task.id})
-
-@app.route('/task/<int:task_id>/status')
-def task_status(task_id):
-    task = Task.query.get_or_404(task_id)
-    latest_log = AutomationLog.query.filter_by(task_id=task_id).order_by(AutomationLog.timestamp.desc()).first()
-    
-    # Parse AI reasoning if available
-    ai_analysis = None
-    if task.ai_reasoning:
-        try:
-            ai_analysis = json.loads(task.ai_reasoning)
-        except:
-            ai_analysis = {"reasoning": task.ai_reasoning}
-    
-    return jsonify({
-        'status': task.status,
-        'message': latest_log.action if latest_log else 'No updates',
-        'screenshot': task.screenshot_path if task.screenshot_path else None,
-        'ai_analysis': ai_analysis
-    })

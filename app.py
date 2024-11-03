@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import logging
 
 # Configure logging
@@ -32,7 +31,7 @@ app.config["SESSION_COOKIE_SECURE"] = True  # Force secure cookies
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # Set SameSite policy
 
 # Initialize database
-db = SQLAlchemy()
+from models import db
 db.init_app(app)
 
 # Ensure required directories exist
@@ -53,9 +52,8 @@ except Exception as e:
     screenshot_service = None
     automation_service = None
 
-# Import routes after db and service initialization
-from models import *
-from routes import *
+# Import routes after services initialization
+import routes
 
 # Create tables within app context
 with app.app_context():

@@ -1,36 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide flash messages after 5 seconds
-    const flashMessages = document.querySelectorAll('.alert');
-    flashMessages.forEach(message => {
-        setTimeout(() => {
-            message.style.opacity = '0';
-            setTimeout(() => message.remove(), 300);
-        }, 5000);
-    });
-
+    // Load saved settings
+    loadSettings();
+    
+    // Initialize theme
+    initializeTheme();
+    
     // Settings Modal Functionality
     const settingsModal = document.getElementById('settingsModal');
     if (settingsModal) {
-        // Temperature range input handlers
-        const llavaTemp = document.getElementById('llavaTemp');
-        const llavaTempValue = document.getElementById('llavaTempValue');
-        const llamaTemp = document.getElementById('llamaTemp');
-        const llamaTempValue = document.getElementById('llamaTempValue');
-
-        if (llavaTemp && llavaTempValue) {
-            llavaTemp.addEventListener('input', (e) => {
-                llavaTempValue.textContent = e.target.value;
-                updateRangeBackground(llavaTemp);
+        // Theme mode handler
+        const themeModeSelect = document.getElementById('themeMode');
+        if (themeModeSelect) {
+            themeModeSelect.addEventListener('change', (e) => {
+                applyTheme(e.target.value);
             });
-            updateRangeBackground(llavaTemp);
-        }
-
-        if (llamaTemp && llamaTempValue) {
-            llamaTemp.addEventListener('input', (e) => {
-                llamaTempValue.textContent = e.target.value;
-                updateRangeBackground(llamaTemp);
-            });
-            updateRangeBackground(llamaTemp);
         }
 
         // Save settings button handler
@@ -42,35 +25,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 const originalText = saveButton.innerHTML;
                 saveButton.innerHTML = '<div class="loading-spinner"></div>';
 
-                const settings = {
-                    llava: {
-                        temperature: parseFloat(llavaTemp.value),
-                        max_tokens: parseInt(document.getElementById('llavaTokens').value)
-                    },
-                    llama2: {
-                        temperature: parseFloat(llamaTemp.value),
-                        max_tokens: parseInt(document.getElementById('llamaTokens').value)
-                    }
-                };
-
                 try {
-                    const response = await fetch('/settings/update', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(settings)
-                    });
+                    const settings = {
+                        theme: themeModeSelect.value,
+                        models: {
+                            vision: document.getElementById('visionModel').value,
+                            reasoning: document.getElementById('reasoningModel').value
+                        }
+                    };
 
-                    if (response.ok) {
-                        const result = await response.json();
-                        const modal = bootstrap.Modal.getInstance(settingsModal);
-                        modal.hide();
-                        
-                        showNotification('Settings saved successfully', 'success');
-                    } else {
-                        throw new Error('Failed to save settings');
-                    }
+                    // Save to localStorage
+                    localStorage.setItem('appSettings', JSON.stringify(settings));
+
+                    // Update theme immediately
+                    applyTheme(settings.theme);
+
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(settingsModal);
+                    modal.hide();
+                    
+                    showNotification('Settings saved successfully', 'success');
                 } catch (error) {
                     console.error('Error saving settings:', error);
                     showNotification('Failed to save settings', 'danger');
@@ -82,16 +56,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Update model status indicators
+        // Update model status indicators and populate model lists
         async function updateModelStatus() {
             try {
-                const response = await fetch('/health');
-                const status = await response.json();
+                const [healthResponse, modelsResponse] = await Promise.all([
+                    fetch('/health'),
+                    fetch('/api/models/list')
+                ]);
 
-                updateStatusBadge('llavaStatus', status.ollama_service);
-                updateStatusBadge('llamaStatus', status.ollama_service);
+                const health = await healthResponse.json();
+                const models = await modelsResponse.json();
+
+                // Update status badges
+                updateStatusBadge('visionStatus', health.ollama_service);
+                updateStatusBadge('reasoningStatus', health.ollama_service);
+
+                // Populate model dropdowns
+                const visionSelect = document.getElementById('visionModel');
+                const reasoningSelect = document.getElementById('reasoningModel');
+
+                if (visionSelect && models.vision) {
+                    populateModelSelect(visionSelect, models.vision);
+                }
+                if (reasoningSelect && models.reasoning) {
+                    populateModelSelect(reasoningSelect, models.reasoning);
+                }
             } catch (error) {
                 console.error('Error updating model status:', error);
+                showNotification('Failed to fetch model information', 'danger');
             }
         }
 
@@ -100,10 +92,60 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Theme Management
+function initializeTheme() {
+    const savedSettings = getSavedSettings();
+    if (savedSettings && savedSettings.theme) {
+        applyTheme(savedSettings.theme);
+        document.getElementById('themeMode').value = savedSettings.theme;
+    } else {
+        // Default to system theme
+        applyTheme('system');
+    }
+}
+
+function applyTheme(mode) {
+    const html = document.documentElement;
+    
+    if (mode === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+    } else {
+        html.setAttribute('data-bs-theme', mode);
+    }
+}
+
 // Helper Functions
-function updateRangeBackground(rangeInput) {
-    const value = (rangeInput.value - rangeInput.min) / (rangeInput.max - rangeInput.min) * 100;
-    rangeInput.style.background = `linear-gradient(90deg, var(--apple-primary) ${value}%, var(--apple-border) ${value}%)`;
+function getSavedSettings() {
+    try {
+        return JSON.parse(localStorage.getItem('appSettings'));
+    } catch {
+        return null;
+    }
+}
+
+function loadSettings() {
+    const settings = getSavedSettings();
+    if (settings) {
+        // Apply theme
+        if (settings.theme) {
+            document.getElementById('themeMode').value = settings.theme;
+            applyTheme(settings.theme);
+        }
+
+        // Apply model selections when dropdowns are available
+        if (settings.models) {
+            const visionSelect = document.getElementById('visionModel');
+            const reasoningSelect = document.getElementById('reasoningModel');
+
+            if (visionSelect && settings.models.vision) {
+                visionSelect.value = settings.models.vision;
+            }
+            if (reasoningSelect && settings.models.reasoning) {
+                reasoningSelect.value = settings.models.reasoning;
+            }
+        }
+    }
 }
 
 function updateStatusBadge(elementId, isConnected) {
@@ -112,6 +154,16 @@ function updateStatusBadge(elementId, isConnected) {
         badge.className = `badge ${isConnected ? 'bg-success' : 'bg-danger'}`;
         badge.textContent = isConnected ? 'Connected' : 'Disconnected';
     }
+}
+
+function populateModelSelect(select, models) {
+    select.innerHTML = '';
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = `${model.name} - ${model.description}`;
+        select.appendChild(option);
+    });
 }
 
 function showNotification(message, type) {
@@ -128,3 +180,11 @@ function showNotification(message, type) {
         setTimeout(() => alert.remove(), 300);
     }, 5000);
 }
+
+// System theme change listener
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    const savedSettings = getSavedSettings();
+    if (savedSettings && savedSettings.theme === 'system') {
+        applyTheme('system');
+    }
+});
