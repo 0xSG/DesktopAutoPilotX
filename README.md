@@ -1,6 +1,6 @@
 <div align="center">
 
-# DesktopAutoPilotX
+# DesktopAutoPilotX (WIP)
 
 🤖 Open-source AI automation for everyone, powered by local LLMs
 
