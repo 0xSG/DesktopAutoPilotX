@@ -3,7 +3,7 @@
 # DesktopAutoPilotX
 
 🤖 Open-source AI automation for everyone, powered by local LLMs
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/0xSG/DesktopAutoPilotX)
 [![GitHub stars](https://img.shields.io/github/stars/0xSG/DesktopAutoPilotX?style=social)](https://github.com/0xSG/DesktopAutoPilotX/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
